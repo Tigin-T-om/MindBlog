@@ -1,0 +1,236 @@
+{% extends 'myapp/base.html' %}
+
+{% block title %}{% if form.instance.pk %}Edit Blog Post{% else %}Create New Blog Post{% endif %} - My Blog{% endblock %}
+
+{% block extra_css %}
+<style>
+    .blog-form-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .form-header h2 {
+        color: var(--secondary-color);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-header p {
+        color: var(--text-color);
+        font-size: 0.9rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--secondary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 0.75rem;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+
+    textarea.form-control {
+        min-height: 300px;
+        resize: vertical;
+    }
+
+    .btn-submit {
+        padding: 0.8rem 2rem;
+        border-radius: 8px;
+        font-weight: 500;
+        margin-top: 1rem;
+    }
+
+    .btn-cancel {
+        padding: 0.8rem 2rem;
+        border-radius: 8px;
+        font-weight: 500;
+        margin-top: 1rem;
+        margin-left: 1rem;
+        background-color: #6c757d;
+        color: white;
+    }
+
+    .btn-cancel:hover {
+        background-color: #5a6268;
+        color: white;
+    }
+
+    .alert {
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: var(--text-color);
+        margin-top: 0.25rem;
+    }
+
+    .image-preview {
+        max-width: 300px;
+        max-height: 200px;
+        margin-top: 1rem;
+        border-radius: 8px;
+        display: none;
+    }
+
+    .image-preview img {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+    }
+
+    .author-info {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+
+    .author-info p {
+        margin-bottom: 0;
+        color: var(--text-color);
+    }
+
+    .author-info strong {
+        color: var(--secondary-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="blog-form-container">
+    <div class="form-header">
+        <h2>{% if form.instance.pk %}Edit Blog Post{% else %}Create New Blog Post{% endif %}</h2>
+        <p>Share your thoughts with the world</p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="author-info">
+            <p><strong>Author:</strong> {{ user.get_full_name|default:user.username }}</p>
+            <p><strong>Date:</strong> {% now "F j, Y" %}</p>
+        </div>
+
+        <div class="form-group">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ form.title.value|default:'' }}" required>
+            {% if form.title.errors %}
+                <div class="alert alert-danger">
+                    {{ form.title.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="image" class="form-label">Featured Image</label>
+            <input type="file" class="form-control" id="image" name="image" accept="image/*">
+            <div class="form-text">Upload a featured image for your blog post (optional)</div>
+            {% if form.image.errors %}
+                <div class="alert alert-danger">
+                    {{ form.image.errors }}
+                </div>
+            {% endif %}
+            <div class="image-preview" id="imagePreview">
+                <img src="" alt="Preview">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="excerpt" class="form-label">Excerpt</label>
+            <textarea class="form-control" id="excerpt" name="excerpt" rows="3">{{ form.excerpt.value|default:'' }}</textarea>
+            <div class="form-text">A brief summary of your blog post (optional)</div>
+            {% if form.excerpt.errors %}
+                <div class="alert alert-danger">
+                    {{ form.excerpt.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="content" class="form-label">Content</label>
+            <textarea class="form-control" id="content" name="content" rows="15">{{ form.content.value|default:'' }}</textarea>
+            {% if form.content.errors %}
+                <div class="alert alert-danger">
+                    {{ form.content.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="status" class="form-label">Status</label>
+            <select class="form-control" id="status" name="status">
+                <option value="draft" {% if form.status.value == 'draft' %}selected{% endif %}>Draft</option>
+                <option value="published" {% if form.status.value == 'published' %}selected{% endif %}>Published</option>
+            </select>
+            {% if form.status.errors %}
+                <div class="alert alert-danger">
+                    {{ form.status.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-primary btn-submit">
+                <i class="fas fa-save me-2"></i>{% if form.instance.pk %}Update Post{% else %}Create Post{% endif %}
+            </button>
+            <a href="{% url 'blog_list' %}" class="btn btn-cancel">
+                <i class="fas fa-times me-2"></i>Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+{% block extra_js %}
+<script>
+    // Image preview functionality
+    document.getElementById('image').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('imagePreview');
+        const previewImg = preview.querySelector('img');
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(file);
+        } else {
+            preview.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,130 @@
+{% extends 'myapp/base.html' %}
+
+{% block title %}Register - My Blog{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-container {
+        max-width: 400px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .register-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .register-header h2 {
+        color: var(--secondary-color);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .register-header p {
+        color: var(--text-color);
+        font-size: 0.9rem;
+    }
+
+    .form-floating {
+        margin-bottom: 1rem;
+    }
+
+    .form-floating input {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 1rem 0.75rem;
+    }
+
+    .form-floating input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+
+    .btn-register {
+        width: 100%;
+        padding: 0.8rem;
+        border-radius: 8px;
+        font-weight: 500;
+        margin-top: 1rem;
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        color: var(--text-color);
+    }
+
+    .login-link a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+
+    .alert {
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .password-requirements {
+        font-size: 0.8rem;
+        color: var(--text-color);
+        margin-top: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-header">
+        <h2>Create Account</h2>
+        <p>Join our blogging community</p>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" action="{% url 'register' %}">
+        {% csrf_token %}
+        <div class="form-floating">
+            <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
+            <label for="username">Username</label>
+        </div>
+        <div class="form-floating">
+            <input type="email" class="form-control" id="email" name="email" placeholder="Email" required>
+            <label for="email">Email</label>
+        </div>
+        <div class="form-floating">
+            <input type="password" class="form-control" id="password1" name="password1" placeholder="Password" required>
+            <label for="password1">Password</label>
+        </div>
+        <div class="form-floating">
+            <input type="password" class="form-control" id="password2" name="password2" placeholder="Confirm Password" required>
+            <label for="password2">Confirm Password</label>
+        </div>
+        <div class="password-requirements">
+            <i class="fas fa-info-circle me-1"></i>
+            Password must be at least 8 characters long and include numbers and letters
+        </div>
+        <button type="submit" class="btn btn-primary btn-register">
+            <i class="fas fa-user-plus me-2"></i>Register
+        </button>
+    </form>
+
+    <div class="login-link">
+        Already have an account? <a href="{% url 'login' %}">Login here</a>
+    </div>
+</div>
+{% endblock %} 

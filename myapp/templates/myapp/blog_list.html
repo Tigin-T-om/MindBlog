@@ -1,0 +1,150 @@
+{% extends 'myapp/base.html' %}
+
+{% block title %}Blog Posts - My Blog{% endblock %}
+
+{% block extra_css %}
+<style>
+    .blog-list {
+        margin-top: 2rem;
+    }
+
+    .blog-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+
+    .blog-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .blog-title {
+        color: #2d3436;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        text-decoration: none;
+    }
+
+    .blog-title:hover {
+        color: #0d6efd;
+    }
+
+    .blog-meta {
+        color: #636e72;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .blog-meta a {
+        color: #0d6efd;
+        text-decoration: none;
+    }
+
+    .blog-meta a:hover {
+        text-decoration: underline;
+    }
+
+    .blog-excerpt {
+        color: #636e72;
+        line-height: 1.6;
+    }
+
+    .pagination {
+        margin-top: 2rem;
+    }
+
+    .page-link {
+        color: #0d6efd;
+        border: none;
+        padding: 0.5rem 1rem;
+        margin: 0 0.25rem;
+        border-radius: 5px;
+    }
+
+    .page-link:hover {
+        background-color: #e7f1ff;
+        color: #0d6efd;
+    }
+
+    .page-item.active .page-link {
+        background-color: #0d6efd;
+        color: white;
+    }
+
+    .no-posts {
+        text-align: center;
+        padding: 3rem;
+        color: #636e72;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="blog-list">
+        <h1 class="mb-4">Blog Posts</h1>
+        
+        {% if blog_posts %}
+            {% for post in blog_posts %}
+                <article class="blog-card">
+                    <h2 class="blog-title">
+                        <a href="{% url 'blog_detail' post.slug %}">{{ post.title }}</a>
+                    </h2>
+                    <div class="blog-meta">
+                        <span><i class="far fa-calendar-alt me-1"></i>{{ post.created_at|date:"F j, Y" }}</span>
+                        <span class="mx-2">•</span>
+                        <span>
+                            <i class="far fa-user me-1"></i>
+                            <a href="{% url 'blogger_detail' post.author.id %}">{{ post.author.get_full_name|default:post.author.username }}</a>
+                        </span>
+                    </div>
+                    <div class="blog-excerpt">
+                        {{ post.excerpt|truncatewords:50 }}
+                    </div>
+                </article>
+            {% endfor %}
+
+            {% if is_paginated %}
+                <nav aria-label="Page navigation" class="pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="no-posts">
+                <i class="fas fa-newspaper fa-3x mb-3"></i>
+                <h3>No blog posts yet</h3>
+                <p>Check back later for new content!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

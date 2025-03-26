@@ -1,0 +1,374 @@
+{% extends 'myapp/base.html' %}
+
+{% block title %}{{ post.title }} - My Blog{% endblock %}
+
+{% block extra_css %}
+<style>
+    .blog-post {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .post-header {
+        margin-bottom: 2rem;
+    }
+
+    .post-title {
+        color: var(--secondary-color);
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .post-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: var(--text-color);
+        font-size: 0.9rem;
+    }
+
+    .post-meta i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+    }
+
+    .post-image {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .post-content {
+        color: var(--text-color);
+        line-height: 1.8;
+        font-size: 1.1rem;
+    }
+
+    .post-actions {
+        margin-top: 2rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-action {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background-color: #c82333;
+        color: white;
+    }
+
+    .back-button {
+        color: var(--text-color);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .back-button:hover {
+        color: var(--primary-color);
+    }
+
+    .social-interaction-bar {
+        border-top: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+        padding: 1rem 0;
+    }
+
+    .btn-like, .btn-comment, .btn-share, .btn-bookmark, .btn-follow, .btn-like-comment {
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        transition: color 0.2s;
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-like:hover, .btn-comment:hover, .btn-share:hover, .btn-bookmark:hover {
+        color: #333;
+    }
+
+    .btn-like i, .btn-like-comment i {
+        transition: transform 0.2s;
+    }
+
+    .btn-like:hover i, .btn-like-comment:hover i {
+        transform: scale(1.1);
+    }
+
+    .btn-follow {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .btn-follow:hover {
+        background-color: #0056b3;
+    }
+
+    .comment-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .likes-count, .comments-count, .shares-count {
+        font-size: 0.9rem;
+        color: #666;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <article class="blog-post">
+                <h1 class="blog-post-title">{{ post.title }}</h1>
+                <p class="blog-post-meta">
+                    By <a href="{% url 'blogger_detail' post.author.id %}">{{ post.author.get_full_name|default:post.author.username }}</a>
+                    on {{ post.created_at|date:"F j, Y" }}
+                </p>
+
+                {% if post.image %}
+                    <img src="{{ post.image.url }}" alt="{{ post.title }}" class="img-fluid mb-4">
+                {% endif %}
+
+                <div class="blog-post-content">
+                    {{ post.content|linebreaks }}
+                </div>
+
+                <!-- Social Interaction Bar -->
+                <div class="social-interaction-bar mt-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <button class="btn-like me-3" data-post-id="{{ post.slug }}">
+                                <i class="fas fa-heart {% if user in post.likes.all %}text-danger{% endif %}"></i>
+                                <span class="likes-count">{{ post.get_likes_count }}</span>
+                            </button>
+                            <a href="{% url 'create_comment' post.slug %}" class="btn-comment me-3">
+                                <i class="fas fa-comment"></i>
+                                <span class="comments-count">{{ post.get_comments_count }}</span>
+                            </a>
+                            <button class="btn-share me-3" data-post-id="{{ post.slug }}">
+                                <i class="fas fa-paper-plane"></i>
+                                <span class="shares-count">{{ post.shares }}</span>
+                            </button>
+                            <button class="btn-bookmark me-3">
+                                <i class="fas fa-bookmark"></i>
+                            </button>
+                        </div>
+                        {% if user.is_authenticated and user != post.author %}
+                            <button class="btn-follow" data-username="{{ post.author.username }}">
+                                {% if user in post.author.profile.followers.all %}
+                                    Following
+                                {% else %}
+                                    Follow
+                                {% endif %}
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+
+            <hr class="my-5">
+
+            <section class="comments-section">
+                <h3>Comments</h3>
+                
+                {% if user.is_authenticated %}
+                    <div class="mb-4">
+                        <a href="{% url 'create_comment' post.slug %}" class="btn btn-primary">
+                            <i class="fas fa-comment"></i> Add a Comment
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        Please <a href="{% url 'login' %}?next={{ request.path }}">log in</a> to leave a comment.
+                    </div>
+                {% endif %}
+
+                {% if comments %}
+                    {% for comment in comments %}
+                        <div class="comment mb-4">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0">
+                                    <img src="https://via.placeholder.com/40" alt="User avatar" class="rounded-circle">
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="comment-header">
+                                        <h5 class="mb-1">{{ comment.author.get_full_name|default:comment.author.username }}</h5>
+                                        <small class="text-muted">{{ comment.created_at|date:"F j, Y, g:i a" }}</small>
+                                    </div>
+                                    <div class="comment-content mt-2">
+                                        {{ comment.content|linebreaks }}
+                                    </div>
+                                    <div class="comment-actions mt-2">
+                                        <button class="btn-like-comment" data-comment-id="{{ comment.id }}">
+                                            <i class="fas fa-heart {% if user in comment.likes.all %}text-danger{% endif %}"></i>
+                                            <span class="likes-count">{{ comment.get_likes_count }}</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted">No comments yet. Be the first to comment!</p>
+                {% endif %}
+            </section>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">About the Author</h5>
+                    <p class="card-text">
+                        <a href="{% url 'blogger_detail' post.author.id %}">
+                            {{ post.author.get_full_name|default:post.author.username }}
+                        </a>
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            Member since {{ post.author.date_joined|date:"F Y" }}
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Like post
+    const likeBtn = document.querySelector('.btn-like');
+    if (likeBtn) {
+        likeBtn.addEventListener('click', function() {
+            const postId = this.dataset.postId;
+            fetch(`/blog/${postId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const icon = this.querySelector('i');
+                const count = this.querySelector('.likes-count');
+                if (data.liked) {
+                    icon.classList.add('text-danger');
+                } else {
+                    icon.classList.remove('text-danger');
+                }
+                count.textContent = data.likes_count;
+            });
+        });
+    }
+
+    // Share post
+    const shareBtn = document.querySelector('.btn-share');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', function() {
+            const postId = this.dataset.postId;
+            fetch(`/blog/${postId}/share/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.querySelector('.shares-count').textContent = data.shares_count;
+            });
+        });
+    }
+
+    // Follow user
+    const followBtn = document.querySelector('.btn-follow');
+    if (followBtn) {
+        followBtn.addEventListener('click', function() {
+            const username = this.dataset.username;
+            fetch(`/blog/user/${username}/follow/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.textContent = data.following ? 'Following' : 'Follow';
+            });
+        });
+    }
+
+    // Like comment
+    const likeCommentBtns = document.querySelectorAll('.btn-like-comment');
+    likeCommentBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const commentId = this.dataset.commentId;
+            fetch(`/blog/comment/${commentId}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const icon = this.querySelector('i');
+                const count = this.querySelector('.likes-count');
+                if (data.liked) {
+                    icon.classList.add('text-danger');
+                } else {
+                    icon.classList.remove('text-danger');
+                }
+                count.textContent = data.likes_count;
+            });
+        });
+    });
+});
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
+{% endblock %} 

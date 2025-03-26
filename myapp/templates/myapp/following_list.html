@@ -1,0 +1,102 @@
+{% extends 'myapp/base.html' %}
+
+{% block title %}{{ user.username }}'s Following - My Blog{% endblock %}
+
+{% block extra_css %}
+<style>
+    .following-list {
+        margin-top: 2rem;
+    }
+
+    .following-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .following-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+
+    .following-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .following-info {
+        flex-grow: 1;
+    }
+
+    .following-name {
+        color: var(--secondary-color);
+        font-weight: 600;
+        text-decoration: none;
+        margin-bottom: 0.25rem;
+        display: block;
+    }
+
+    .following-name:hover {
+        color: var(--primary-color);
+    }
+
+    .following-username {
+        color: var(--text-color);
+        font-size: 0.9rem;
+    }
+
+    .no-following {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-color);
+    }
+
+    .no-following i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="following-list">
+        <h1 class="mb-4">{{ user.username }}'s Following</h1>
+        
+        {% if following %}
+            {% for followed_user in following %}
+                <div class="following-card">
+                    <div class="following-avatar">
+                        {% if followed_user.profile.profile_picture %}
+                            <img src="{{ followed_user.profile.profile_picture.url }}" alt="{{ followed_user.username }}">
+                        {% else %}
+                            <i class="fas fa-user"></i>
+                        {% endif %}
+                    </div>
+                    <div class="following-info">
+                        <a href="{% url 'blogger_detail' followed_user.id %}" class="following-name">
+                            {{ followed_user.get_full_name|default:followed_user.username }}
+                        </a>
+                        <span class="following-username">@{{ followed_user.username }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-following">
+                <i class="fas fa-user-friends"></i>
+                <h3>Not following anyone yet</h3>
+                <p>When {{ user.username }} follows someone, they'll appear here.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,330 @@
+{% extends 'myapp/base.html' %}
+
+{% block title %}{{ blogger.username }} - My Blog{% endblock %}
+
+{% block extra_css %}
+<style>
+    .blogger-profile {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .blogger-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .blogger-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin-right: 1.5rem;
+    }
+
+    .blogger-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .blogger-info h1 {
+        color: var(--secondary-color);
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .blogger-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 1rem;
+        color: var(--text-color);
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+
+    .stat-item i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+    }
+
+    .blogger-bio {
+        color: var(--text-color);
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+
+    .blogger-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .btn-edit-profile {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .btn-follow {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-weight: 500;
+        transition: background-color 0.3s;
+    }
+
+    .btn-follow:hover {
+        background-color: var(--secondary-color);
+        color: white;
+    }
+
+    .btn-following {
+        background-color: #6c757d;
+    }
+
+    .btn-following:hover {
+        background-color: #5a6268;
+    }
+
+    .blogger-posts h2 {
+        color: var(--secondary-color);
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-create-post {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .post-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .post-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    .post-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .post-title {
+        color: var(--secondary-color);
+        text-decoration: none;
+        font-weight: 500;
+        flex-grow: 1;
+    }
+
+    .post-title:hover {
+        color: var(--primary-color);
+    }
+
+    .post-date {
+        color: var(--text-color);
+        font-size: 0.9rem;
+        margin-left: 1rem;
+    }
+
+    .post-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: 1rem;
+    }
+
+    .btn-action {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        color: var(--text-color);
+        transition: all 0.3s ease;
+    }
+
+    .btn-action:hover {
+        color: var(--primary-color);
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .no-posts {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-color);
+    }
+
+    .no-posts i {
+        font-size: 3rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="blogger-profile">
+        <div class="blogger-header">
+            <div class="blogger-avatar">
+                {% if blogger.profile.profile_picture %}
+                    <img src="{{ blogger.profile.profile_picture.url }}" alt="{{ blogger.username }}">
+                {% else %}
+                    <i class="fas fa-user"></i>
+                {% endif %}
+            </div>
+            <div class="blogger-info">
+                <h1>{{ blogger.get_full_name|default:blogger.username }}</h1>
+                <div class="blogger-stats">
+                    <div class="stat-item" onclick="window.location.href='{% url 'followers_list' blogger.id %}'">
+                        <i class="fas fa-users"></i>
+                        <span>{{ blogger.profile.get_followers_count }} Followers</span>
+                    </div>
+                    <div class="stat-item" onclick="window.location.href='{% url 'following_list' blogger.id %}'">
+                        <i class="fas fa-user-friends"></i>
+                        <span>{{ blogger.profile.get_following_count }} Following</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-newspaper"></i>
+                        <span>{{ posts.count }} Posts</span>
+                    </div>
+                    <div class="stat-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Joined {{ blogger.date_joined|date:"F Y" }}</span>
+                    </div>
+                </div>
+                <div class="blogger-bio">
+                    {% if blogger.profile.bio %}
+                        {{ blogger.profile.bio|linebreaks }}
+                    {% else %}
+                        <p>No biography available yet.</p>
+                    {% endif %}
+                </div>
+                <div class="blogger-actions">
+                    {% if user == blogger %}
+                        <a href="{% url 'edit_profile' %}" class="btn btn-outline-primary btn-edit-profile">
+                            <i class="fas fa-edit me-1"></i>Edit Profile
+                        </a>
+                    {% else %}
+                        <button class="btn btn-follow {% if user in blogger.profile.followers.all %}btn-following{% endif %}" 
+                                data-username="{{ blogger.username }}">
+                            {% if user in blogger.profile.followers.all %}
+                                Following
+                            {% else %}
+                                Follow
+                            {% endif %}
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="blogger-posts">
+        <h2>
+            Blog Posts
+            {% if user == blogger %}
+                <a href="{% url 'create_blog_post' %}" class="btn btn-primary btn-create-post">
+                    <i class="fas fa-plus me-1"></i>Create New Post
+                </a>
+            {% endif %}
+        </h2>
+        {% if posts %}
+            <ul class="post-list">
+                {% for post in posts %}
+                    <li class="post-item">
+                        <a href="{% url 'blog_detail' post.slug %}" class="post-title">
+                            {{ post.title }}
+                        </a>
+                        <span class="post-date">
+                            {{ post.created_at|date:"F j, Y" }}
+                        </span>
+                        {% if user == blogger %}
+                            <div class="post-actions">
+                                <a href="{% url 'edit_blog_post' post.slug %}" class="btn btn-action" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="no-posts">
+                <i class="fas fa-pen-fancy"></i>
+                <p>No blog posts yet.</p>
+                {% if user == blogger %}
+                    <a href="{% url 'create_blog_post' %}" class="btn btn-primary mt-3">
+                        <i class="fas fa-plus me-1"></i>Create Your First Post
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const followBtn = document.querySelector('.btn-follow');
+    if (followBtn) {
+        followBtn.addEventListener('click', function() {
+            const username = this.dataset.username;
+            fetch(`/blog/user/${username}/follow/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                this.textContent = data.following ? 'Following' : 'Follow';
+                this.classList.toggle('btn-following', data.following);
+            });
+        });
+    }
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
+{% endblock %} 
